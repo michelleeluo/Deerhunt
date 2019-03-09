@@ -23,6 +23,58 @@ class GridPlayer:
     #         enemy_distance.append(len(game_map.bfs(enemy_coord, resource_nodes[0])) - 1)
     #     self.set_safety(min(enemy_distance))
 
+    def bfs2(self, map, workers,  en_w, en_m, melees, start: (int, int), dest: (int, int)) -> [(int, int)]:
+        """(Map, (int, int), (int, int)) -> [(int, int)]
+        Finds the shortest path from <start> to <dest>.
+        Returns a path with a list of coordinates starting with
+        <start> to <dest>.
+        """
+        graph = map.grid
+        width = len(graph[0])
+        height = len(graph)
+        queue = [[start]]
+        vis = set(start)
+        if start == dest or graph[start[1]][start[0]] == 'X' or \
+                not (0 < start[0] < len(graph[0])-1 \
+                     and 0 < start[1] < len(graph)-1):
+            return None
+
+        while queue:
+            path = queue.pop(0)
+            node = path[-1]
+            r = node[1]
+            c = node[0]
+
+            if node == dest:
+                return path
+            for adj in ((c+1, r), (c-1, r), (c, r+1), (c, r-1)):
+                if (self.is_occupied(workers, melees, en_w, en_m, adj, width, height) == False or graph[adj[1]][adj[0]] == 'R') and (adj not in vis):
+                    queue.append(path + [adj])
+                    vis.add(adj)
+                # elif self.is_occupied(workers, melees, adj, width, height) == False and graph[adj[1]][adj[0]] == 'R' and adj not in vis:
+                #     queue.append(path + [adj])
+                #     vis.add(adj)
+                
+
+
+    def is_occupied(self, workers, melees, en_w, en_m,  node, width, height):
+        if node[0] == 0 or node[1] == 0 or node[0] == width-1 or node[1] == height-1:
+            return True
+        for w in workers:
+            if w.position == node:
+                return True
+        for m in melees:
+            if m.position == node:
+                return True
+        for w in en_w:
+            if w.position == node:
+                return True
+        for m in en_m:
+            if m.position == node:
+                return True
+        return False
+
+
     def tick(self, game_map, your_units, enemy_units, resources, turns_left):
         # if turns_left == 100:
         #     # Pre-game calculations.
@@ -31,6 +83,9 @@ class GridPlayer:
         workers = your_units.get_all_unit_of_type('worker')
         melees = your_units.get_all_unit_of_type('melee')
         moves = []
+
+        en_w = enemy_units.get_all_unit_of_type('worker')
+        en_m = enemy_units.get_all_unit_of_type('melee')
 
         # resource_nodes = game_map.find_all_resources()
         # asymmetrical_node = resource_nodes[(len(resource_nodes) // 2)]
@@ -49,7 +104,7 @@ class GridPlayer:
                 if attack_list:
                     moves.append(unit.attack(attack_list[0][1]))
                 else:
-                    s_path = game_map.bfs(unit.position(), closest_node)
+                    s_path = self.bfs2(game_map, workers, melees, en_w, en_m, unit.position(), closest_node)
                     if s_path:
                         moves.append(unit.move_towards(s_path[1]))
             else: pass 
@@ -65,7 +120,7 @@ class GridPlayer:
                 moves.append(unit.mine())
             else:
                 closest_node = game_map.closest_resources(unit)
-                s_path = game_map.bfs(unit.position(), closest_node)
+                s_path = self.bfs2(game_map, workers, melees, en_w, en_m,  unit.position(), closest_node)
                 if s_path:
                     moves.append(unit.move_towards(s_path[1]))
 
@@ -87,7 +142,7 @@ class GridPlayer:
                         moves.append(worker.move('LEFT'))
                 else:
                     closest_node = game_map.closest_resources(worker)
-                    s_path = game_map.bfs(worker.position(), closest_node)
+                    s_path = self.bfs2(game_map, workers, melees, en_w, en_m,  unit.position(), closest_node)
                     if s_path:
                         moves.append(worker.move_towards(s_path[1]))
 
@@ -111,7 +166,7 @@ class GridPlayer:
                         pass
                 else: # move to the closest resource in order to try and find enemies to kill
                     closest_node = game_map.closest_resources(melee)
-                    s_path = game_map.bfs(melee.position(), closest_node)
+                    s_path = self.bfs2(game_map, workers, melees,  en_w, en_m, unit.position(), closest_node)
                     if s_path:
                         moves.append(melee.move_towards(s_path[1]))
 

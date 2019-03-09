@@ -76,6 +76,10 @@ class GridFighters(Game):
                 print('ERROR: {} cannot act while duplicating'.format(k))
                 return False
 
+            if player_state[k].is_mining():
+                print('ERROR: {} cannot act while mining'.format(k))
+                return False
+
             if k in moved_units:
                 print('ERROR: Cannot make multiple actions for unit {}'.format(k))
                 return False
@@ -185,4 +189,3 @@ class GridFighters(Game):
 
         if self.has_lost(self.p1_units):
             return self.p2_conn.name
-
