@@ -1,9 +1,9 @@
-import operator
+from move import Move
+from pprint import pprint
 
 class GridPlayer:
 
     def __init__(self):
-        self.foo = True
         self.safe_turns = 0
 
     def set_safety(self, safe):
@@ -24,7 +24,9 @@ class GridPlayer:
         self.set_safety(min(enemy_distance))
 
     def tick(self, game_map, your_units, enemy_units, resources, turns_left):
-<<<<<<< HEAD
+        
+        print("\n--------RESOURCES: {0} | TURNS LEFT: {1}--------".format(resources, turns_left))
+        
         if turns_left == 100:
             # Pre-game calculations.
             self.pre_game_calc(game_map, your_units)
@@ -40,20 +42,7 @@ class GridPlayer:
 
         print(self.safe_turns)
         print(resource_nodes, asymmetrical_node)
-        count = 0
 
-        for unit in melees:
-            if count == 0:
-                moves.append(unit.move('DOWN'))
-                count = count + 1
-            else:
-                closest_node = game_map.closest_resources(unit)
-                test_node = tuple(map(operator.add, closest_node, (-1, 0)))
-                #print(test_node)
-                s_path = game_map.bfs(unit.position(), test_node)
-                if s_path:
-                    moves.append(unit.move_towards(s_path[1])) 
-                    
         for unit in workers:
             if unit.can_mine(game_map):
                 moves.append(unit.mine())
@@ -62,7 +51,7 @@ class GridPlayer:
                 s_path = game_map.bfs(unit.position(), closest_node)
                 if s_path:
                     moves.append(unit.move_towards(s_path[1]))
-        """
+        
         for unit in melees:
             enemy_list = unit.nearby_enemies_by_distance(enemy_units)
             if enemy_list:
@@ -77,40 +66,5 @@ class GridPlayer:
                     moves.append(unit.duplicate('LEFT'))
             else:
                 moves.append(unit.move('DOWN'))
-            """
         
-=======
-        #print("turns left!!! {}\n", turns_left)
-        melees = your_units.get_all_unit_of_type('melee')
-        #melees = []
-        workers = your_units.get_all_unit_of_type('worker')
-        moves = []
-
-        #melees dead
-        if melees == []:
-            for worker in workers:
-                enemy_melees = enemy_units.get_all_unit_of_type('melee')
-            
-                if enemy_melees:
-                    en_pos = enemy_melees[0].position
-                    work_pos = worker.position
-                    if en_pos[0] == work_pos[0] and en_pos[1] > work_pos[1]:
-                        moves.append(worker.move('UP'))
-                    elif en_pos[0] == work_pos[0] and en_pos[1] < work_pos[1]:
-                        moves.append(worker.move('DOWN'))
-                    elif en_pos[0] < work_pos[0] and en_pos[1] == work_pos[1]:
-                        moves.append(worker.move('RIGHT'))
-                    else:
-                        moves.append(worker.move('LEFT'))
-                else:
-                    closest_node = game_map.closest_resources(worker)
-                    s_path = game_map.bfs(worker.position(), closest_node)
-                    if s_path:
-                        moves.append(worker.move_towards(s_path[1]))
-
-
-        #moves.append(melees[0].move_towards((3,8)))
-        #moves.append((melees[0]).move('LEFT'))
-        #print("my move")
->>>>>>> ccb46a76f26a20109a4bccd43ca81058a896d3b8
         return moves
