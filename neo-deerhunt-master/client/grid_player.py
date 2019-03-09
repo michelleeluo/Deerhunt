@@ -79,10 +79,10 @@ class GridPlayer:
         # if turns_left == 100:
         #     # Pre-game calculations.
         #     self.pre_game_calc(game_map, your_units)
-
+        moves = []
         workers = your_units.get_all_unit_of_type('worker')
         melees = your_units.get_all_unit_of_type('melee')
-        moves = []
+        locations = game_map.find_all_resources()
 
         en_w = enemy_units.get_all_unit_of_type('worker')
         en_m = enemy_units.get_all_unit_of_type('melee')
@@ -94,35 +94,60 @@ class GridPlayer:
         # print(resource_nodes, asymmetrical_node)
         # count = 0
 
-        for unit in melees:
-            enemy_list = unit.nearby_enemies_by_distance(enemy_units)
-            closest_node = game_map.closest_resources(unit)
-
-
+        # If there are any melees then assign the first melee to look for enemies
+        if len(melees) > 0:
+            enemy_list = melees[0].nearby_enemies_by_distance(enemy_units)
+            closest_node = game_map.closest_resources(melees[0])
+            
             if enemy_list:
-                attack_list = unit.can_attack(enemy_units)
+                attack_list = melees[0].can_attack(enemy_units)
                 if attack_list:
-                    moves.append(unit.attack(attack_list[0][1]))
+                    moves.append(melees[0].attack(attack_list[0][1]))
+                else:
+                    s_path = game_map.bfs(melees[0].position(), closest_node)
+                    if s_path:
+                        moves.append(melees[0].move_towards(s_path[1]))
+            else: pass
+
+        for i in range(1, len(melees)):
+            enemy_list = melees[i].nearby_enemies_by_distance(enemy_units)
+            target_node = locations[i]
+            
+            if enemy_list:
+                attack_list = melees[i].can_attack(enemy_units)
+                if attack_list:
+                    moves.append(melees[i].attack(attack_list[0][1]))
                 else:
                     s_path = self.bfs2(game_map, workers, melees, en_w, en_m, unit.position(), closest_node)
                     if s_path:
-                        moves.append(unit.move_towards(s_path[1]))
-            else: pass 
+                        moves.append(melees[i].move_towards(s_path[1]))
+            else: pass # something else should go here, need to make them more aggressive?
             # else:
             #     closest_node = game_map.closest_resources(unit)
             #     test_node = tuple(map(operator.add, closest_node, (-1, 0)))
             #     s_path = game_map.bfs(unit.position(), test_node)
             #     if s_path:
             #         moves.append(unit.move_towards(s_path[1]))             
-                    
-        for unit in workers:
-            if unit.can_mine(game_map):
-                moves.append(unit.mine())
+
+        # If there are any workers, then assign the first worker to the closest node  
+        if len(workers) > 0:
+            if workers[0].can_mine(game_map):
+                moves.append(workers[0].mine())
+            else:
+                closest_node = game_map.closest_resources(workers[0])
+                s_path = game_map.bfs(workers[0].position(), closest_node)
+                if s_path:
+                    moves.append(workers[0].move_towards(s_path[1]))
+
+        for i in range(1, len(workers)):
+            target_node = locations[i]
+            if workers[i].can_mine(game_map):
+                moves.append(workers[i].mine())
             else:
                 closest_node = game_map.closest_resources(unit)
                 s_path = self.bfs2(game_map, workers, melees, en_w, en_m,  unit.position(), closest_node)
                 if s_path:
-                    moves.append(unit.move_towards(s_path[1]))
+                    moves.append(workers[i].move_towards(s_path[1]))
 
         #melees dead
         if melees == []:
