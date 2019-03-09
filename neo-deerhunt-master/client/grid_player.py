@@ -24,7 +24,6 @@ class GridPlayer:
         self.set_safety(min(enemy_distance))
 
     def tick(self, game_map, your_units, enemy_units, resources, turns_left):
-<<<<<<< HEAD
         if turns_left == 100:
             # Pre-game calculations.
             self.pre_game_calc(game_map, your_units)
@@ -62,29 +61,6 @@ class GridPlayer:
                 s_path = game_map.bfs(unit.position(), closest_node)
                 if s_path:
                     moves.append(unit.move_towards(s_path[1]))
-        """
-        for unit in melees:
-            enemy_list = unit.nearby_enemies_by_distance(enemy_units)
-            if enemy_list:
-                attack_list = unit.can_attack(enemy_units)
-                #print("attack list: ", attack_list)
-                if attack_list:
-                    moves.append(unit.attack(attack_list[0][1]))
-                else:
-                    closest = enemy_units.units[enemy_list[0][0]]
-                    moves.append(unit.move_towards((closest.x, closest.y)))
-            elif unit.can_duplicate(resources):
-                    moves.append(unit.duplicate('LEFT'))
-            else:
-                moves.append(unit.move('DOWN'))
-            """
-        
-=======
-        #print("turns left!!! {}\n", turns_left)
-        melees = your_units.get_all_unit_of_type('melee')
-        #melees = []
-        workers = your_units.get_all_unit_of_type('worker')
-        moves = []
 
         #melees dead
         if melees == []:
@@ -108,9 +84,28 @@ class GridPlayer:
                     if s_path:
                         moves.append(worker.move_towards(s_path[1]))
 
+        # If workers are dead:
+        if workers == []:
+            for melee in melees:
+                enemy_workers = enemy_units.get_all_unit_of_type('worker')
+                enemy_melees = enemy_units.get_all_unit_of_type('melee')
+                if enemy_workers:
+                    attack_list = melee.can_attack(enemy_workers)
+                    if attack_list:
+                        moves.append(melee.attack(attack_list[0][1]))
+                    else: 
+                        closest = enemy_units.units[enemy_workers[0][0]]
+                        moves.append(melee.move_towards((closest.x, closest.y)))
+                elif enemy_melees:
+                    attack_list = melee.can_attack(enemy_melees)
+                    if attack_list:
+                        moves.append(melee.attack(attack_list[0][1]))
+                    else:
+                        pass
+                else:
+                    closest_node = game_map.closest_resources(melee)
+                    s_path = game_map.bfs(melee.position(), closest_node)
+                    if s_path:
+                        moves.append(melee.move_towards(s_path[1]))
 
-        #moves.append(melees[0].move_towards((3,8)))
-        #moves.append((melees[0]).move('LEFT'))
-        #print("my move")
->>>>>>> ccb46a76f26a20109a4bccd43ca81058a896d3b8
         return moves
